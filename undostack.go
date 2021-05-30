@@ -32,7 +32,7 @@ func (o *Operation) do() (err error) {
 func (o *Operation) undo() (err error) {
 	for i := len(o.Actions) - 1; i >= 0; i-- {
 		a := o.Actions[i]
-		e := a.Do()
+		e := a.Undo()
 		if e != nil {
 			err = multierror.Append(err, e)
 		}
