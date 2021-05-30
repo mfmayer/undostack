@@ -2,7 +2,11 @@
 
 `undostack` allows operations to be done (executed) and keeps track of them in order to be able to undo and redo them.
 
-An `Operation` can consist of one or more `Action`s, whose `Do()` methods are called when the opration is done/redone and whose `Undo()` methods are called in reverse order when the operation is undone. `Action` is the interface that wraps the `Do()` and `Undo()` method that must be implemented for arbitrary actions:
+[![GoDoc](https://godoc.org/github.com/mfmayer/undostack?status.svg)](http://godoc.org/github.com/mfmayer/undostack)
+
+An `Operation` can consist of one or more `Action`s, whose `Do()` methods are called when the opration is done/redone and whose `Undo()` methods are called in reverse order when the operation is undone.
+
+`Action` is the interface that wraps the `Do()` and `Undo()` method that must be implemented for arbitrary actions:
 
 ```go
 type Action interface {
