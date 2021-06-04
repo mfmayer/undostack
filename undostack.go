@@ -77,6 +77,10 @@ func (us *UndoStack) Do(op *Operation) (err error) {
 		}
 		us.operations = append(us.operations, op)
 	}
+	if us.nextDoIndex >= len(us.operations) {
+		// nothing to do
+		return
+	}
 	err = us.operations[us.nextDoIndex].do()
 	us.nextDoIndex++
 	return
