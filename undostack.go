@@ -19,17 +19,19 @@ type Operation struct {
 	Actions []Action
 }
 
-func (o *Operation) do() (err error) {
+func (o *Operation) do() error {
+	var err *multierror.Error
 	for _, a := range o.Actions {
 		e := a.Do()
 		if e != nil {
 			err = multierror.Append(err, e)
 		}
 	}
-	return
+	return err.ErrorOrNil()
 }
 
-func (o *Operation) undo() (err error) {
+func (o *Operation) undo() error {
+	var err *multierror.Error
 	for i := len(o.Actions) - 1; i >= 0; i-- {
 		a := o.Actions[i]
 		e := a.Undo()
@@ -37,7 +39,7 @@ func (o *Operation) undo() (err error) {
 			err = multierror.Append(err, e)
 		}
 	}
-	return
+	return err.ErrorOrNil()
 }
 
 // UndoStack enables operations to be done (executed) and keeps track of them in order to be able to undo and redo them.
