@@ -15,23 +15,23 @@ type Action interface {
 // Operation can consist of one or more actions, whose Do methods are called in order when the opration is done/reonde and
 // whose Undo methods are called in reverse order when the operation is undone.
 type Operation struct {
-	Name    string
-	Actions []Action
+	Name            string
+	Actions         []Action
+	DoErrorFormat   func([]error) string
+	UndoErrorFormat func([]error) string
 }
 
-func (o *Operation) do() error {
-	var err *multierror.Error
+func (o *Operation) do() (err *multierror.Error) {
 	for _, a := range o.Actions {
 		e := a.Do()
 		if e != nil {
 			err = multierror.Append(err, e)
 		}
 	}
-	return err.ErrorOrNil()
+	return err
 }
 
-func (o *Operation) undo() error {
-	var err *multierror.Error
+func (o *Operation) undo() (err *multierror.Error) {
 	for i := len(o.Actions) - 1; i >= 0; i-- {
 		a := o.Actions[i]
 		e := a.Undo()
@@ -39,7 +39,7 @@ func (o *Operation) undo() error {
 			err = multierror.Append(err, e)
 		}
 	}
-	return err.ErrorOrNil()
+	return err
 }
 
 // UndoStack enables operations to be done (executed) and keeps track of them in order to be able to undo and redo them.
@@ -83,7 +83,11 @@ func (us *UndoStack) Do(op *Operation) (err error) {
 		// nothing to do
 		return
 	}
-	err = us.operations[us.nextDoIndex].do()
+	errMulti := us.operations[us.nextDoIndex].do()
+	if op.DoErrorFormat != nil {
+		errMulti.ErrorFormat = op.DoErrorFormat
+	}
+	err = errMulti.ErrorOrNil()
 	us.nextDoIndex++
 	return
 }
@@ -99,7 +103,12 @@ func (us *UndoStack) Redo() (err error) {
 		// nothing to redo
 		return
 	}
-	err = us.operations[us.nextDoIndex].do()
+	op := us.operations[us.nextDoIndex]
+	errMulti := op.do()
+	if op.DoErrorFormat != nil {
+		errMulti.ErrorFormat = op.DoErrorFormat
+	}
+	err = errMulti.ErrorOrNil()
 	us.nextDoIndex++
 	return
 }
@@ -116,7 +125,12 @@ func (us *UndoStack) Undo() (err error) {
 		return
 	}
 	us.nextDoIndex--
-	err = us.operations[us.nextDoIndex].undo()
+	op := us.operations[us.nextDoIndex]
+	errMulti := op.undo()
+	if op.UndoErrorFormat != nil {
+		errMulti.ErrorFormat = op.UndoErrorFormat
+	}
+	err = errMulti.ErrorOrNil()
 	return
 }
 
